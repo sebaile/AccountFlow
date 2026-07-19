@@ -1,0 +1,1095 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SebaTech · Gestor de Cuentas Streaming</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap');
+
+    :root {
+      --bg: #0b0f12;
+      --panel: #12181c;
+      --panel-2: #171e23;
+      --border: #232c31;
+      --text: #e7edf0;
+      --text-dim: #7e919b;
+      --cyan: #35d9c4;
+      --cyan-dim: rgba(53, 217, 196, 0.12);
+      --green: #4ade80;
+      --amber: #f6c453;
+      --red: #f16a6a;
+      --mono: 'JetBrains Mono', monospace;
+      --sans: 'Inter', sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      min-height: 100vh;
+    }
+
+    .scan-line {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+      opacity: 0.5;
+      animation: scan 4s linear infinite;
+      z-index: 50;
+      pointer-events: none;
+    }
+
+    @keyframes scan {
+      0% {
+        transform: translateY(0);
+      }
+
+      100% {
+        transform: translateY(100vh);
+      }
+    }
+
+    header {
+      padding: 22px 28px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 14px;
+      background: linear-gradient(180deg, var(--panel), var(--bg));
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--cyan);
+      box-shadow: 0 0 12px var(--cyan);
+    }
+
+    .brand h1 {
+      font-size: 16px;
+      margin: 0;
+      letter-spacing: 0.5px;
+      font-weight: 700;
+    }
+
+    .brand .sub {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text-dim);
+    }
+
+    .tabs {
+      display: flex;
+      gap: 6px;
+    }
+
+    .tab-btn {
+      font-family: var(--mono);
+      font-size: 12px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      padding: 9px 16px;
+      background: var(--panel-2);
+      color: var(--text-dim);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all .15s;
+    }
+
+    .tab-btn.active {
+      color: var(--bg);
+      background: var(--cyan);
+      border-color: var(--cyan);
+      font-weight: 700;
+    }
+
+    .tab-btn:hover:not(.active) {
+      border-color: var(--cyan);
+      color: var(--cyan);
+    }
+
+    main {
+      padding: 24px 28px 60px;
+      max-width: 1500px;
+      margin: 0 auto;
+    }
+
+    .kpis {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px;
+      margin-bottom: 22px;
+    }
+
+    .kpi {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+    }
+
+    .kpi .label {
+      font-size: 11px;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      font-family: var(--mono);
+    }
+
+    .kpi .value {
+      font-size: 22px;
+      font-weight: 700;
+      margin-top: 4px;
+      font-family: var(--mono);
+    }
+
+    .kpi.cyan .value {
+      color: var(--cyan);
+    }
+
+    .kpi.green .value {
+      color: var(--green);
+    }
+
+    .kpi.amber .value {
+      color: var(--amber);
+    }
+
+    .kpi.red .value {
+      color: var(--red);
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .panel h2 {
+      font-size: 14px;
+      margin: 0 0 16px;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--cyan);
+      font-family: var(--mono);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .panel h2::before {
+      content: '//';
+      color: var(--text-dim);
+    }
+
+    .grid-form {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .field label {
+      font-size: 11px;
+      color: var(--text-dim);
+      font-family: var(--mono);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+
+    input,
+    select,
+    textarea {
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      padding: 9px 10px;
+      font-size: 13px;
+      font-family: var(--sans);
+      outline: none;
+      transition: border-color .15s;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      border-color: var(--cyan);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 38px;
+    }
+
+    .btn {
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+      padding: 10px 18px;
+      border-radius: 6px;
+      border: 1px solid var(--cyan);
+      background: var(--cyan);
+      color: #04201c;
+      cursor: pointer;
+      transition: opacity .15s;
+    }
+
+    .btn:hover {
+      opacity: 0.85;
+    }
+
+    .btn.secondary {
+      background: transparent;
+      color: var(--cyan);
+    }
+
+    .btn.ghost {
+      background: transparent;
+      color: var(--text-dim);
+      border-color: var(--border);
+    }
+
+    .btn.small {
+      padding: 5px 10px;
+      font-size: 10px;
+    }
+
+    .btn.danger {
+      border-color: var(--red);
+      color: var(--red);
+      background: transparent;
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 16px;
+      flex-wrap: wrap;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12.5px;
+      min-width: 1000px;
+    }
+
+    th {
+      background: var(--panel-2);
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      font-family: var(--mono);
+      font-size: 10.5px;
+      padding: 10px 12px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+      font-family: var(--sans);
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr:hover td {
+      background: rgba(53, 217, 196, 0.04);
+    }
+
+    .badge {
+      font-family: var(--mono);
+      font-size: 10.5px;
+      padding: 3px 9px;
+      border-radius: 20px;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+    }
+
+    .badge.activa {
+      background: rgba(74, 222, 128, 0.12);
+      color: var(--green);
+    }
+
+    .badge.porvencer {
+      background: rgba(246, 196, 83, 0.14);
+      color: var(--amber);
+    }
+
+    .badge.vencida {
+      background: rgba(241, 106, 106, 0.14);
+      color: var(--red);
+    }
+
+    .badge.online {
+      background: var(--cyan-dim);
+      color: var(--cyan);
+    }
+
+    .badge.offline {
+      background: rgba(126, 145, 155, 0.12);
+      color: var(--text-dim);
+    }
+
+    .actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .icon-btn {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      border-radius: 5px;
+      padding: 5px 8px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .icon-btn:hover {
+      border-color: var(--cyan);
+      color: var(--cyan);
+    }
+
+    .icon-btn.wa:hover {
+      border-color: var(--green);
+      color: var(--green);
+    }
+
+    .icon-btn.del:hover {
+      border-color: var(--red);
+      color: var(--red);
+    }
+
+    .empty {
+      padding: 40px 20px;
+      text-align: center;
+      color: var(--text-dim);
+      font-family: var(--mono);
+      font-size: 13px;
+    }
+
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .search {
+      min-width: 220px;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--panel);
+      border: 1px solid var(--cyan);
+      color: var(--text);
+      padding: 12px 18px;
+      border-radius: 8px;
+      font-family: var(--mono);
+      font-size: 12.5px;
+      z-index: 100;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+      transform: translateY(120%);
+      transition: transform .25s ease;
+    }
+
+    .toast.show {
+      transform: translateY(0);
+    }
+
+    .note {
+      font-size: 11.5px;
+      color: var(--text-dim);
+      margin-top: 2px;
+      line-height: 1.5;
+    }
+
+    ::-webkit-scrollbar {
+      height: 8px;
+      width: 8px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<script src="{{ url_for('static', filename='js/api.js') }}"></script>
+<script src="{{ url_for('static', filename='js/cuentas.js') }}"></script>
+
+<body>
+  <div class="scan-line"></div>
+  <header>
+    <div class="brand">
+      <div class="dot"></div>
+      <div>
+        <h1>SebaTech — Gestor de Cuentas</h1>
+        <div class="sub">cuentas_streaming.sys · compatible con tu Cuentas_Streaming.xlsx</div>
+      </div>
+    </div>
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="cuentas">Cuentas</button>
+      <button class="tab-btn" data-tab="clientes">Clientes</button>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- ================= CUENTAS TAB ================= -->
+    <section id="tab-cuentas">
+      <div class="kpis" id="kpisCuentas"></div>
+
+      <div class="panel">
+        <h2 id="formCuentasTitle">Nueva cuenta</h2>
+        <div class="grid-form">
+          <div class="field">
+            <label>Servicio</label>
+            <select id="c_servicio">
+              <option>Netflix</option>
+              <option>Disney+</option>
+              <option>HBO Max</option>
+              <option>Amazon Prime Video</option>
+              <option>Paramount+</option>
+              <option>Apple TV+</option>
+              <option>Spotify</option>
+              <option>YouTube Premium</option>
+              <option>Crunchyroll</option>
+              <option>ChatGpt (GO)</option>
+              <option>Otro</option>
+            </select>
+          </div>
+          <div class="field"><label>Perfil</label><input id="c_perfil" placeholder="Perfil 1"></div>
+          <div class="field"><label>Usuario / Correo</label><input id="c_usuario" placeholder="correo@servicio.com">
+          </div>
+          <div class="field"><label>Contraseña</label><input id="c_pass" placeholder="••••••••"></div>
+          <div class="field"><label>Cliente</label><input id="c_cliente" placeholder="Nombre del cliente"></div>
+          <div class="field"><label>Teléfono cliente</label><input id="c_tel" placeholder="+56 9 1234 5678"></div>
+          <div class="field"><label>Fecha de inicio</label><input id="c_inicio" type="date"></div>
+          <div class="field"><label>Fecha de vencimiento</label><input id="c_venc" type="date"></div>
+          <div class="field">
+            <label>Ciclo de pago</label>
+            <select id="c_ciclo">
+              <option value="Mensual">Mensual</option>
+              <option value="Anual">Anual</option>
+            </select>
+          </div>
+          <div class="field"><label>Costo ($)</label><input id="c_costo" type="number" min="0" placeholder="0"></div>
+          <div class="field"><label>Valor ($)</label><input id="c_valor" type="number" min="0" placeholder="0"></div>
+          <div class="field"><label>En línea</label>
+            <select id="c_online">
+              <option value="Sí">Sí</option>
+              <option value="No">No</option>
+            </select>
+          </div>
+          <div class="field" style="grid-column: 1 / -1;"><label>Observaciones</label><textarea id="c_obs"
+              placeholder="Notas, perfil asignado, etc."></textarea></div>
+        </div>
+        <div class="btn-row">
+          <button class="btn" id="btnGuardarCuenta">Guardar cuenta</button>
+          <button class="btn ghost hidden" id="btnCancelarCuenta">Cancelar edición</button>
+        </div>
+        <div class="note">Costo y valor se autocompletan según el servicio (según tu lista de precios) — puedes
+          ajustarlos igual. Ganancia, duración, días restantes, próxima fecha de pago y estado se calculan solos.</div>
+      </div>
+
+      <div class="panel">
+        <div class="toolbar">
+          <h2 style="margin:0;">Listado de cuentas</h2>
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <input class="search" id="buscarCuenta" placeholder="Buscar por cliente, servicio o usuario...">
+            <button class="btn secondary" id="btnExportar">⬇ Exportar a Excel</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Servicio</th>
+                <th>Perfil</th>
+                <th>Usuario/Correo</th>
+                <th>Cliente</th>
+                <th>Teléfono</th>
+                <th>Inicio</th>
+                <th>Vencimiento</th>
+                <th>Ciclo</th>
+                <th>Costo</th>
+                <th>Valor</th>
+                <th>Ganancia</th>
+                <th>Duración</th>
+                <th>Días rest.</th>
+                <th>Próx. pago</th>
+                <th>Estado</th>
+                <th>En línea</th>
+                <th>Recordatorio</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="tablaCuentas"></tbody>
+          </table>
+        </div>
+        <div class="empty hidden" id="emptyCuentas">No hay cuentas registradas todavía.</div>
+      </div>
+    </section>
+
+    <!-- ================= CLIENTES TAB ================= -->
+    <section id="tab-clientes" class="hidden">
+      <div class="kpis" id="kpisClientes"></div>
+
+      <div class="panel">
+        <h2 id="formClienteTitle">Nuevo cliente</h2>
+        <div class="grid-form">
+          <div class="field"><label>Cliente</label><input id="cl_nombre" placeholder="Nombre completo"></div>
+          <div class="field"><label>Usuario Instagram (opcional)</label><input id="cl_ig" placeholder="@usuario"></div>
+          <div class="field"><label>Teléfono (opcional)</label><input id="cl_tel" placeholder="+56 9 1234 5678"></div>
+        </div>
+        <div class="btn-row">
+          <button class="btn" id="btnGuardarCliente">Guardar cliente</button>
+          <button class="btn ghost hidden" id="btnCancelarCliente">Cancelar edición</button>
+        </div>
+        <div class="note">Cantidad de cuentas, gasto mensual, próximo vencimiento y estado general se calculan
+          automáticamente en base a las cuentas del listado "Cuentas" que coincidan con este nombre.</div>
+      </div>
+
+      <div class="panel">
+        <div class="toolbar">
+          <h2 style="margin:0;">Listado de clientes</h2>
+          <input class="search" id="buscarCliente" placeholder="Buscar cliente...">
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Cliente</th>
+                <th>Instagram</th>
+                <th>Teléfono</th>
+                <th>Cant. cuentas</th>
+                <th>Gasto mensual</th>
+                <th>Próx. vencimiento</th>
+                <th>Estado general</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="tablaClientes"></tbody>
+          </table>
+        </div>
+        <div class="empty hidden" id="emptyClientes">No hay clientes registrados todavía.</div>
+      </div>
+    </section>
+
+  </main>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    let cuentas = [];
+    let clientes = [];
+    let editCuentaId = null;
+    let editClienteId = null;
+
+    const $ = (id) => document.getElementById(id);
+    const uid = () => 'id_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+
+    // Lista de precios (igual a la hoja "Precios" del Excel real)
+    const PRECIOS = {
+      'Netflix': { costo: 4000, valor: 5500, ciclo: 'Mensual' },
+      'Disney+': { costo: 3000, valor: 4500, ciclo: 'Anual' },
+      'HBO Max': { costo: 3000, valor: 4500, ciclo: 'Anual' },
+      'Amazon Prime Video': { costo: 3000, valor: 4500, ciclo: 'Mensual' },
+      'Paramount+': { costo: 3000, valor: 4000, ciclo: 'Mensual' },
+      'Apple TV+': { costo: 3000, valor: 4500, ciclo: 'Mensual' },
+      'Spotify': { costo: 4000, valor: 5500, ciclo: 'Anual' },
+      'YouTube Premium': { costo: 3000, valor: 4500, ciclo: 'Mensual' },
+      'Crunchyroll': { costo: 3000, valor: 4500, ciclo: 'Anual' },
+      'ChatGpt (GO)': { costo: 5000, valor: 8000, ciclo: 'Mensual' },
+    };
+    const SERVICIOS_RESUMEN = ['Netflix', 'Disney+', 'HBO Max', 'Amazon Prime Video', 'Paramount+', 'Apple TV+', 'Spotify', 'YouTube Premium', 'Crunchyroll', 'Otro'];
+
+    function showToast(msg) {
+      const t = $('toast'); t.textContent = msg; t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2200);
+    }
+
+    $('c_servicio').addEventListener('change', () => {
+      const p = PRECIOS[$('c_servicio').value];
+      if (p && !editCuentaId) {
+        $('c_costo').value = p.costo; $('c_valor').value = p.valor; $('c_ciclo').value = p.ciclo;
+      }
+    });
+
+    // ---------- STORAGE ----------
+    async function loadData() {
+      try {
+        const r = await window.storage.get('cuentas');
+        cuentas = r ? JSON.parse(r.value) : [];
+      } catch (e) { cuentas = []; }
+      try {
+        const r2 = await window.storage.get('clientes');
+        clientes = r2 ? JSON.parse(r2.value) : [];
+      } catch (e) { clientes = []; }
+      render();
+    }
+    async function saveCuentas() {
+      try { await window.storage.set('cuentas', JSON.stringify(cuentas)); }
+      catch (e) { showToast('⚠ Error guardando cuentas'); }
+    }
+    async function saveClientes() {
+      try { await window.storage.set('clientes', JSON.stringify(clientes)); }
+      catch (e) { showToast('⚠ Error guardando clientes'); }
+    }
+
+    // ---------- HELPERS DE CÁLCULO ----------
+    function diffDias(fechaA, fechaB) {
+      const a = new Date(fechaA); const b = new Date(fechaB);
+      return Math.round((b - a) / 86400000);
+    }
+    function hoyISO() { return new Date().toISOString().slice(0, 10); }
+
+    function calcularCuenta(c) {
+      const hoy = hoyISO();
+      c.ganancia = (Number(c.valor) || 0) - (Number(c.costo) || 0);
+      c.duracion = (c.inicio && c.venc) ? diffDias(c.inicio, c.venc) : null;
+      c.diasRestantes = c.venc ? diffDias(hoy, c.venc) : null;
+      c.proximoPago = c.venc || null;
+      if (c.diasRestantes === null) { c.estado = 'Sin fecha'; }
+      else if (c.diasRestantes < 0) { c.estado = 'Vencida'; }
+      else if (c.diasRestantes <= 3) { c.estado = 'Por vencer'; }
+      else { c.estado = 'Activa'; }
+      return c;
+    }
+
+    function cicloAMeses(ciclo) { return ciclo === 'Anual' ? 12 : 1; }
+
+    function estadoBadge(estado) {
+      const map = { 'Activa': 'activa', 'Por vencer': 'porvencer', 'Vencida': 'vencida', 'Sin fecha': 'offline' };
+      return `<span class="badge ${map[estado] || 'offline'}">${estado}</span>`;
+    }
+
+    function fmtMoney(n) { return '$' + (Number(n) || 0).toLocaleString('es-CL'); }
+    function fmtFecha(f) { if (!f) return '—'; const [y, m, d] = f.split('-'); return `${d}-${m}-${y}`; }
+
+    // ---------- CUENTAS: CRUD ----------
+    function limpiarFormCuenta() {
+      ['c_perfil', 'c_usuario', 'c_pass', 'c_cliente', 'c_tel', 'c_inicio', 'c_venc', 'c_costo', 'c_valor', 'c_obs'].forEach(id => $(id).value = '');
+      $('c_servicio').value = 'Netflix'; $('c_ciclo').value = 'Mensual'; $('c_online').value = 'Sí';
+      editCuentaId = null;
+      $('formCuentasTitle').textContent = 'Nueva cuenta';
+      $('btnCancelarCuenta').classList.add('hidden');
+    }
+
+    $('btnGuardarCuenta').addEventListener('click', async () => {
+      const cliente = $('c_cliente').value.trim();
+      const usuario = $('c_usuario').value.trim();
+      if (!cliente || !usuario) { showToast('⚠ Completa al menos Usuario/Correo y Cliente'); return; }
+
+      let c = editCuentaId ? cuentas.find(x => x.id === editCuentaId) : { id: uid(), recordatorio: false };
+      c.servicio = $('c_servicio').value;
+      c.perfil = $('c_perfil').value.trim();
+      c.usuario = usuario;
+      c.pass = $('c_pass').value;
+      c.cliente = cliente;
+      c.tel = $('c_tel').value.trim();
+      c.inicio = $('c_inicio').value;
+      c.venc = $('c_venc').value;
+      c.ciclo = $('c_ciclo').value;
+      c.costo = $('c_costo').value;
+      c.valor = $('c_valor').value;
+      c.online = $('c_online').value;
+      c.obs = $('c_obs').value;
+      calcularCuenta(c);
+
+      if (!editCuentaId) { cuentas.push(c); }
+      await saveCuentas();
+      ensureClienteExiste(cliente, c.tel);
+      limpiarFormCuenta();
+      render();
+      showToast('✓ Cuenta guardada');
+    });
+
+    $('btnCancelarCuenta').addEventListener('click', limpiarFormCuenta);
+
+    function editarCuenta(id) {
+      const c = cuentas.find(x => x.id === id); if (!c) return;
+      editCuentaId = id;
+      $('c_servicio').value = c.servicio || 'Netflix'; $('c_perfil').value = c.perfil || '';
+      $('c_usuario').value = c.usuario || ''; $('c_pass').value = c.pass || '';
+      $('c_cliente').value = c.cliente || ''; $('c_tel').value = c.tel || '';
+      $('c_inicio').value = c.inicio || ''; $('c_venc').value = c.venc || '';
+      $('c_ciclo').value = c.ciclo || 'Mensual'; $('c_costo').value = c.costo || '';
+      $('c_valor').value = c.valor || ''; $('c_online').value = c.online || 'Sí';
+      $('c_obs').value = c.obs || '';
+      $('formCuentasTitle').textContent = 'Editando cuenta';
+      $('btnCancelarCuenta').classList.remove('hidden');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    async function borrarCuenta(id) {
+      cuentas = cuentas.filter(x => x.id !== id);
+      await saveCuentas();
+      render();
+      showToast('🗑 Cuenta eliminada');
+    }
+
+    function toggleRecordatorio(id) {
+      const c = cuentas.find(x => x.id === id); if (!c) return;
+      c.recordatorio = !c.recordatorio;
+      saveCuentas();
+      render();
+    }
+
+    function enviarWhatsApp(c) {
+      if (!c.tel) { showToast('⚠ Este cliente no tiene teléfono registrado'); return; }
+      const tel = c.tel.replace(/[^0-9]/g, '');
+      const msg = `Hola ${c.cliente}! Te recordamos que tu cuenta de ${c.servicio} (${c.usuario}) vence el ${fmtFecha(c.venc)}. Valor: ${fmtMoney(c.valor)}. ¿Renovamos? 😊`;
+      window.open(`https://wa.me/${tel}?text=${encodeURIComponent(msg)}`, '_blank');
+    }
+
+    // ---------- CLIENTES: helpers de agregación ----------
+    function ensureClienteExiste(nombre, tel) {
+      const existe = clientes.find(x => x.nombre.toLowerCase() === nombre.toLowerCase());
+      if (!existe) {
+        clientes.push({ id: uid(), nombre, ig: '', tel: tel || '' });
+        saveClientes();
+      }
+    }
+
+    function statsCliente(nombre) {
+      const propias = cuentas.filter(c => c.cliente.toLowerCase() === nombre.toLowerCase());
+      const cantidad = propias.length;
+      const gastoMensual = propias.reduce((sum, c) => {
+        const meses = cicloAMeses(c.ciclo);
+        return sum + ((Number(c.valor) || 0) / meses);
+      }, 0);
+      const vencimientos = propias.map(c => c.venc).filter(Boolean).sort();
+      const proximoVenc = vencimientos[0] || null;
+      let estadoGeneral = 'Sin cuentas';
+      if (cantidad > 0) {
+        if (propias.some(c => c.estado === 'Vencida')) estadoGeneral = 'Con cuentas vencidas';
+        else if (propias.some(c => c.estado === 'Por vencer')) estadoGeneral = 'Por vencer pronto';
+        else estadoGeneral = 'Al día';
+      }
+      return { cantidad, gastoMensual, proximoVenc, estadoGeneral };
+    }
+
+    // ---------- CLIENTES: CRUD ----------
+    function limpiarFormCliente() {
+      ['cl_nombre', 'cl_ig', 'cl_tel'].forEach(id => $(id).value = '');
+      editClienteId = null;
+      $('formClienteTitle').textContent = 'Nuevo cliente';
+      $('btnCancelarCliente').classList.add('hidden');
+    }
+
+    $('btnGuardarCliente').addEventListener('click', async () => {
+      const nombre = $('cl_nombre').value.trim();
+      if (!nombre) { showToast('⚠ Ingresa el nombre del cliente'); return; }
+      let cl = editClienteId ? clientes.find(x => x.id === editClienteId) : null;
+      if (!cl) {
+        cl = clientes.find(x => x.nombre.toLowerCase() === nombre.toLowerCase());
+        if (!cl) { cl = { id: uid() }; clientes.push(cl); }
+      }
+      cl.nombre = nombre;
+      cl.ig = $('cl_ig').value.trim();
+      cl.tel = $('cl_tel').value.trim();
+      await saveClientes();
+      limpiarFormCliente();
+      render();
+      showToast('✓ Cliente guardado');
+    });
+
+    $('btnCancelarCliente').addEventListener('click', limpiarFormCliente);
+
+    function editarCliente(id) {
+      const cl = clientes.find(x => x.id === id); if (!cl) return;
+      editClienteId = id;
+      $('cl_nombre').value = cl.nombre || ''; $('cl_ig').value = cl.ig || ''; $('cl_tel').value = cl.tel || '';
+      $('formClienteTitle').textContent = 'Editando cliente';
+      $('btnCancelarCliente').classList.remove('hidden');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    async function borrarCliente(id) {
+      clientes = clientes.filter(x => x.id !== id);
+      await saveClientes();
+      render();
+      showToast('🗑 Cliente eliminado');
+    }
+
+    // ---------- RENDER ----------
+    function render() {
+      renderKpisCuentas();
+      renderTablaCuentas();
+      renderKpisClientes();
+      renderTablaClientes();
+    }
+
+    function renderKpisCuentas() {
+      const total = cuentas.length;
+      const activas = cuentas.filter(c => c.estado === 'Activa').length;
+      const porVencer = cuentas.filter(c => c.estado === 'Por vencer').length;
+      const vencidas = cuentas.filter(c => c.estado === 'Vencida').length;
+      const ganancia = cuentas.reduce((s, c) => s + (Number(c.ganancia) || 0), 0);
+      $('kpisCuentas').innerHTML = `
+    <div class="kpi cyan"><div class="label">Total cuentas</div><div class="value">${total}</div></div>
+    <div class="kpi green"><div class="label">Activas</div><div class="value">${activas}</div></div>
+    <div class="kpi amber"><div class="label">Por vencer</div><div class="value">${porVencer}</div></div>
+    <div class="kpi red"><div class="label">Vencidas</div><div class="value">${vencidas}</div></div>
+    <div class="kpi cyan"><div class="label">Ganancia total</div><div class="value">${fmtMoney(ganancia)}</div></div>
+  `;
+    }
+
+    function renderTablaCuentas() {
+      const q = ($('buscarCuenta').value || '').toLowerCase();
+      const filtradas = cuentas.filter(c => c.cliente.toLowerCase().includes(q) || c.usuario.toLowerCase().includes(q) || (c.servicio || '').toLowerCase().includes(q));
+      const tbody = $('tablaCuentas');
+      $('emptyCuentas').classList.toggle('hidden', cuentas.length !== 0);
+      tbody.innerHTML = filtradas.map(c => `
+    <tr>
+      <td>${c.servicio || '—'}</td>
+      <td>${c.perfil || '—'}</td>
+      <td>${c.usuario}</td>
+      <td>${c.cliente}</td>
+      <td>${c.tel || '—'}</td>
+      <td>${fmtFecha(c.inicio)}</td>
+      <td>${fmtFecha(c.venc)}</td>
+      <td>${c.ciclo}</td>
+      <td>${fmtMoney(c.costo)}</td>
+      <td>${fmtMoney(c.valor)}</td>
+      <td>${fmtMoney(c.ganancia)}</td>
+      <td>${c.duracion ?? '—'}d</td>
+      <td>${c.diasRestantes ?? '—'}d</td>
+      <td>${fmtFecha(c.proximoPago)}</td>
+      <td>${estadoBadge(c.estado)}</td>
+      <td><span class="badge ${c.online === 'Sí' ? 'online' : 'offline'}">${c.online || 'No'}</span></td>
+      <td><button class="icon-btn ${c.recordatorio ? 'wa' : ''}" onclick="toggleRecordatorio('${c.id}')" title="Marcar recordatorio">${c.recordatorio ? '🔔' : '🔕'}</button></td>
+      <td class="actions">
+        <button class="icon-btn wa" onclick='enviarWhatsApp(${JSON.stringify(c).replace(/'/g, "&#39;")})' title="Enviar WhatsApp">💬</button>
+        <button class="icon-btn" onclick="editarCuenta('${c.id}')" title="Editar">✎</button>
+        <button class="icon-btn del" onclick="borrarCuenta('${c.id}')" title="Eliminar">🗑</button>
+      </td>
+    </tr>
+  `).join('');
+    }
+
+    function renderKpisClientes() {
+      const total = clientes.length;
+      const conCuentas = clientes.filter(cl => statsCliente(cl.nombre).cantidad > 0).length;
+      const gastoTotal = clientes.reduce((s, cl) => s + statsCliente(cl.nombre).gastoMensual, 0);
+      $('kpisClientes').innerHTML = `
+    <div class="kpi cyan"><div class="label">Total clientes</div><div class="value">${total}</div></div>
+    <div class="kpi green"><div class="label">Con cuentas activas</div><div class="value">${conCuentas}</div></div>
+    <div class="kpi cyan"><div class="label">Gasto mensual total</div><div class="value">${fmtMoney(gastoTotal)}</div></div>
+  `;
+    }
+
+    function renderTablaClientes() {
+      const q = ($('buscarCliente').value || '').toLowerCase();
+      const filtrados = clientes.filter(cl => cl.nombre.toLowerCase().includes(q));
+      const tbody = $('tablaClientes');
+      $('emptyClientes').classList.toggle('hidden', clientes.length !== 0);
+      tbody.innerHTML = filtrados.map(cl => {
+        const st = statsCliente(cl.nombre);
+        const estadoMap = { 'Al día': 'activa', 'Por vencer pronto': 'porvencer', 'Con cuentas vencidas': 'vencida', 'Sin cuentas': 'offline' };
+        return `
+    <tr>
+      <td>${cl.nombre}</td>
+      <td>${cl.ig || '—'}</td>
+      <td>${cl.tel || '—'}</td>
+      <td>${st.cantidad}</td>
+      <td>${fmtMoney(st.gastoMensual)}</td>
+      <td>${st.proximoVenc ? fmtFecha(st.proximoVenc) : '—'}</td>
+      <td><span class="badge ${estadoMap[st.estadoGeneral] || 'offline'}">${st.estadoGeneral}</span></td>
+      <td class="actions">
+        <button class="icon-btn" onclick="editarCliente('${cl.id}')" title="Editar">✎</button>
+        <button class="icon-btn del" onclick="borrarCliente('${cl.id}')" title="Eliminar">🗑</button>
+      </td>
+    </tr>
+  `}).join('');
+    }
+
+    // ---------- BUSCADORES ----------
+    $('buscarCuenta').addEventListener('input', renderTablaCuentas);
+    $('buscarCliente').addEventListener('input', renderTablaClientes);
+
+    // ---------- TABS ----------
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        document.querySelectorAll('main > section').forEach(s => s.classList.add('hidden'));
+        $('tab-' + btn.dataset.tab).classList.remove('hidden');
+      });
+    });
+
+    function excelDate(iso) {
+      if (!iso) return null;
+      const d = new Date(iso + 'T00:00:00Z');
+      const epoch = new Date(Date.UTC(1899, 11, 30));
+      return Math.round((d - epoch) / 86400000);
+    }
+
+    $('btnExportar').addEventListener('click', () => {
+      if (cuentas.length === 0 && clientes.length === 0) { showToast('⚠ No hay datos para exportar'); return; }
+
+      const wb = XLSX.utils.book_new();
+      const DATE_FMT = 'dd\\-mm\\-yyyy';
+      const MONEY_FMT = '\\$#,##0';
+
+      const headersCuentas = ['Servicio', 'Perfil', 'Usuario / Correo', 'Contraseña', 'Cliente', 'Teléfono Cliente',
+        'Fecha de Inicio', 'Fecha de Vencimiento', 'Ciclo de Pago', 'Costo ($)', 'Valor ($)', 'Ganancia ($)',
+        'Duración (días)', 'Días Restantes', 'Próxima Fecha de Pago', 'Estado', 'En línea', 'Recordatorio WhatsApp', 'Observaciones'];
+      const wsC = XLSX.utils.aoa_to_sheet([headersCuentas]);
+      for (let i = 0; i < 300; i++) {
+        const r = i + 2;
+        const c = cuentas[i];
+        if (c) {
+          XLSX.utils.sheet_add_aoa(wsC, [[
+            c.servicio || '', c.perfil || '', c.usuario || '', c.pass || '', c.cliente || '', c.tel || '',
+            null, null, c.ciclo || 'Mensual', Number(c.costo) || 0, Number(c.valor) || 0
+          ]], { origin: `A${r}` });
+          if (c.inicio) { wsC[`G${r}`] = { t: 'n', v: excelDate(c.inicio), z: DATE_FMT }; }
+          if (c.venc) { wsC[`H${r}`] = { t: 'n', v: excelDate(c.venc), z: DATE_FMT }; }
+          wsC[`Q${r}`] = { t: 'str', v: c.online || 'No' };
+          wsC[`R${r}`] = { t: 'str', v: c.recordatorio ? 'Sí' : 'No' };
+          wsC[`S${r}`] = { t: 'str', v: c.obs || '' };
+        }
+        wsC[`L${r}`] = { f: `IF(OR($E${r}="",$J${r}="",$K${r}=""),"",$K${r}-$J${r})`, z: MONEY_FMT };
+        wsC[`M${r}`] = { f: `IF(OR($G${r}="",$H${r}=""),"",$H${r}-$G${r})` };
+        wsC[`N${r}`] = { f: `IF($H${r}="","",$H${r}-TODAY())` };
+        wsC[`O${r}`] = { f: `IF($H${r}="","",$H${r})`, z: DATE_FMT };
+        wsC[`P${r}`] = { f: `IF($H${r}="","",IF($N${r}<0,"Vencida",IF($N${r}<=3,"Por vencer","Activa")))` };
+      }
+      wsC['!ref'] = `A1:S301`;
+      wsC['!cols'] = [{ wch: 16 }, { wch: 10 }, { wch: 24 }, { wch: 16 }, { wch: 20 }, { wch: 16 }, { wch: 13 }, { wch: 15 }, { wch: 13 }, { wch: 11 }, { wch: 11 }, { wch: 12 }, { wch: 11 }, { wch: 11 }, { wch: 15 }, { wch: 12 }, { wch: 10 }, { wch: 18 }, { wch: 30 }];
+      XLSX.utils.book_append_sheet(wb, wsC, 'Cuentas');
+
+      // ---- Hoja Clientes (60 filas de capacidad, cabecera en fila 3 igual que tu plantilla) ----
+      const wsCl = XLSX.utils.aoa_to_sheet([
+        ['Resumen por Cliente'],
+        [],
+        ['Cliente', 'Usuario Instagram (opcional)', 'Teléfono (opcional)', 'Cantidad de Cuentas', 'Gasto Mensual Total', 'Próximo Vencimiento', 'Estado General']
+      ]);
+      for (let i = 0; i < 60; i++) {
+        const r = i + 4;
+        const cl = clientes[i];
+        if (cl) {
+          XLSX.utils.sheet_add_aoa(wsCl, [[cl.nombre || '', cl.ig || '', cl.tel || '']], { origin: `A${r}` });
+        }
+        wsCl[`D${r}`] = { f: `IF($A${r}="","",COUNTIF(Cuentas!$E$2:$E$301,$A${r}))` };
+        wsCl[`E${r}`] = { f: `IF($A${r}="","",SUMPRODUCT((Cuentas!$E$2:$E$301=$A${r})*N(Cuentas!$K$2:$K$301)/IF(Cuentas!$I$2:$I$301="Anual",12,1)))`, z: MONEY_FMT };
+        wsCl[`F${r}`] = { f: `IF(OR($A${r}="",$D${r}=0),"",SUMPRODUCT(MIN(Cuentas!$H$2:$H$301+(Cuentas!$E$2:$E$301<>$A${r})*999999+(Cuentas!$H$2:$H$301="")*999999)))`, z: DATE_FMT };
+        wsCl[`G${r}`] = { f: `IF($A${r}="","",IF($D${r}=0,"Sin cuentas",IF(COUNTIFS(Cuentas!$E$2:$E$301,$A${r},Cuentas!$P$2:$P$301,"Vencida")>0,"Con cuentas vencidas",IF(COUNTIFS(Cuentas!$E$2:$E$301,$A${r},Cuentas!$P$2:$P$301,"Por vencer")>0,"Por vencer pronto","Al día"))))` };
+      }
+      wsCl['!ref'] = `A1:G63`;
+      wsCl['!cols'] = [{ wch: 28 }, { wch: 26 }, { wch: 22 }, { wch: 16 }, { wch: 16 }, { wch: 18 }, { wch: 20 }];
+      XLSX.utils.book_append_sheet(wb, wsCl, 'Clientes');
+
+      // ---- Hoja Resumen (dashboard, igual que tu plantilla) ----
+      const wsR = XLSX.utils.aoa_to_sheet([
+        ['Resumen de Cuentas Streaming'],
+        [],
+        ['Cuentas Activas', '', 'Por Vencer (≤3 días)', '', 'Vencidas', '', 'Ingreso Mensual Activo', '', 'Ganancia Mensual Activa'],
+        [],
+        [],
+        [],
+        [],
+        ['Cuentas por Servicio'],
+        ['Servicio', 'Cantidad', 'Ingreso Total', 'Ganancia Total'],
+      ]);
+      wsR['A4'] = { f: 'COUNTIF(Cuentas!P2:P301,"Activa")' };
+      wsR['C4'] = { f: 'COUNTIF(Cuentas!P2:P301,"Por vencer")' };
+      wsR['E4'] = { f: 'COUNTIF(Cuentas!P2:P301,"Vencida")' };
+      wsR['G4'] = { f: 'SUMIF(Cuentas!P2:P301,"Activa",Cuentas!K2:K301)', z: MONEY_FMT };
+      wsR['I4'] = { f: 'SUMIF(Cuentas!P2:P301,"Activa",Cuentas!L2:L301)', z: MONEY_FMT };
+      SERVICIOS_RESUMEN.forEach((serv, i) => {
+        const r = 10 + i;
+        wsR[`A${r}`] = { t: 'str', v: serv };
+        wsR[`B${r}`] = { f: `COUNTIF(Cuentas!A2:A301,A${r})` };
+        wsR[`C${r}`] = { f: `SUMIF(Cuentas!A2:A301,A${r},Cuentas!K2:K301)`, z: MONEY_FMT };
+        wsR[`D${r}`] = { f: `SUMIF(Cuentas!A2:A301,A${r},Cuentas!L2:L301)`, z: MONEY_FMT };
+      });
+      wsR['!ref'] = 'A1:I19';
+      XLSX.utils.book_append_sheet(wb, wsR, 'Resumen');
+
+      // ---- Hoja Precios (referencia, igual que tu plantilla) ----
+      const preciosRows = [['Lista de Precios por Servicio'], [], ['Servicio', 'Costo ($)', 'Valor ($)', 'Ganancia ($)', 'Tiempo']];
+      Object.entries(PRECIOS).forEach(([serv, p]) => {
+        preciosRows.push([serv, p.costo, p.valor, p.valor - p.costo, p.ciclo === 'Anual' ? '12 meses' : '1 mes']);
+      });
+      const wsP = XLSX.utils.aoa_to_sheet(preciosRows);
+      XLSX.utils.book_append_sheet(wb, wsP, 'Precios');
+
+      const fecha = hoyISO();
+      XLSX.writeFile(wb, `Cuentas_Streaming_${fecha}.xlsx`);
+      showToast('✓ Excel exportado con fórmulas activas');
+    });
+
+    loadData();
+  </script>
+  <script src="{{ url_for('static',filename='js/api.js') }}"></script>
+
+  <script src="{{ url_for('static',filename='js/utils.js') }}"></script>
+
+  <script src="{{ url_for('static',filename='js/cuentas.js') }}"></script>
+
+  <script src="{{ url_for('static',filename='js/clientes.js') }}"></script>
+
+  <script src="{{ url_for('static',filename='js/precios.js') }}"></script>
+
+  <script src="{{ url_for('static',filename='js/dashboard.js') }}"></script>
+
+  <script src="{{ url_for('static',filename='js/app.js') }}"></script>
+</body>
+
+</html>

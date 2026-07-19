@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>SebaTech Admin</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+</head>
+
+<body>
+
+    <div class="layout">
+
+        <!-- ==========================================
+                SIDEBAR
+    =========================================== -->
+
+        <aside class="sidebar">
+
+            <div class="logo">
+
+                <h2>SebaTech</h2>
+
+                <span>Streaming Admin</span>
+
+            </div>
+
+            <nav>
+
+                <button class="menu-item active">
+
+                    📊 Dashboard
+
+                </button>
+
+                <button class="menu-item">
+
+                    🎬 Cuentas
+
+                </button>
+
+                <button class="menu-item">
+
+                    👤 Clientes
+
+                </button>
+
+                <button class="menu-item">
+
+                    💰 Servicios
+
+                </button>
+
+                <button class="menu-item">
+
+                    📈 Reportes
+
+                </button>
+
+                <button class="menu-item">
+
+                    ⚙ Configuración
+
+                </button>
+
+            </nav>
+
+        </aside>
+
+        <!-- ==========================================
+                CONTENIDO
+    =========================================== -->
+
+        <main class="contenido">
+
+            <header>
+
+                <h1>
+
+                    Panel Administrativo
+
+                </h1>
+
+                <p>
+
+                    Administración de Servicios Streaming
+
+                </p>
+
+            </header>
+            <!-- ==========================================
+                    DASHBOARD
+        =========================================== -->
+
+            <section class="dashboard">
+
+                <div class="card">
+
+                    <div class="card-info">
+
+                        <span class="card-title">
+
+                            🎬 Total Cuentas
+
+                        </span>
+
+                        <h2 id="totalCuentas">
+
+                            0
+
+                        </h2>
+
+                    </div>
+
+                </div>
+
+                <div class="card">
+
+                    <div class="card-info">
+
+                        <span class="card-title">
+
+                            👤 Clientes
+
+                        </span>
+
+                        <h2 id="totalClientes">
+
+                            0
+
+                        </h2>
+
+                    </div>
+
+                </div>
+
+                <div class="card">
+
+                    <div class="card-info">
+
+                        <span class="card-title">
+
+                            💰 Ganancias
+
+                        </span>
+
+                        <h2 id="ganancias">
+
+                            $0
+
+                        </h2>
+
+                    </div>
+
+                </div>
+
+                <div class="card">
+
+                    <div class="card-info">
+
+                        <span class="card-title">
+
+                            🟡 Por vencer
+
+                        </span>
+
+                        <h2 id="porVencer">
+
+                            0
+
+                        </h2>
+
+                    </div>
+
+                </div>
+
+                <div class="card">
+
+                    <div class="card-info">
+
+                        <span class="card-title">
+
+                            🔴 Vencidas
+
+                        </span>
+
+                        <h2 id="vencidas">
+
+                            0
+
+                        </h2>
+
+                    </div>
+
+                </div>
+
+                <div class="card">
+
+                    <div class="card-info">
+
+                        <span class="card-title">
+
+                            🟢 Activas
+
+                        </span>
+
+                        <h2 id="activas">
+
+                            0
+
+                        </h2>
+
+                    </div>
+
+                </div>
+
+            </section>
+            <!-- ==========================================
+            GESTIÓN DE CUENTAS
+=========================================== -->
+
+            <section class="panel">
+
+                <div class="panel-header">
+
+                    <div>
+
+                        <h2>
+
+                            🎬 Gestión de Cuentas
+
+                        </h2>
+
+                        <p>
+
+                            Administra todas las cuentas streaming
+
+                        </p>
+
+                    </div>
+
+                    <button id="btnNuevaCuenta" class="btn-primary">
+
+                        + Nueva Cuenta
+
+                    </button>
+
+                </div>
+
+                <!-- ===========================
+            BARRA DE HERRAMIENTAS
+    ============================ -->
+
+                <div class="toolbar">
+
+                    <input type="text" id="buscarCuenta" placeholder="🔍 Buscar cliente, correo o servicio...">
+
+                    <select id="filtroServicio">
+
+                        <option value="">Todos los servicios</option>
+
+                        <option>Netflix</option>
+                        <option>Disney+</option>
+                        <option>HBO Max</option>
+                        <option>Prime Video</option>
+                        <option>Spotify</option>
+                        <option>YouTube Premium</option>
+                        <option>Crunchyroll</option>
+                        <option>Paramount+</option>
+                        <option>Apple TV+</option>
+                        <option>Canva Pro</option>
+                        <option>Office 365</option>
+                        <option>ChatGPT Plus</option>
+
+                    </select>
+
+                    <select id="filtroEstado">
+
+                        <option value="">Todos los estados</option>
+
+                        <option>Activa</option>
+
+                        <option>Por vencer</option>
+
+                        <option>Vencida</option>
+
+                    </select>
+
+                </div>
+
+                <!-- ===========================
+                TABLA
+    ============================ -->
+
+                <div class="tabla-container">
+
+                    <table class="tabla" id="tablaCuentas">
+
+                        <thead>
+
+                            <tr>
+
+                                <th>Servicio</th>
+
+                                <th>Cliente</th>
+
+                                <th>Valor</th>
+
+                                <th>Ganancia</th>
+
+                                <th>Días</th>
+
+                                <th>Estado</th>
+
+                                <th>Acciones</th>
+
+                            </tr>
+
+                        </thead>
+
+                        <tbody>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </section>
+            <!-- ==========================================
+            MODAL CUENTAS
+========================================== -->
+
+            <div class="modal" id="modalCuenta">
+
+                <div class="modal-content">
+
+                    <div class="modal-header">
+
+                        <h2 id="tituloModal">
+
+                            Nueva Cuenta
+
+                        </h2>
+
+                        <button id="cerrarModal" class="btn-close">
+
+                            ✕
+
+                        </button>
+
+                    </div>
+
+                    <div class="modal-body">
+
+                        <div class="form-grid">
+
+                            <!-- =======================================
+                        DATOS DE LA CUENTA
+                ======================================== -->
+
+                            <div class="form-section">
+
+                                <h3>
+
+                                    🖥 Datos de la Cuenta
+
+                                </h3>
+
+                                <div class="campo">
+
+                                    <label>
+
+                                        Servicio *
+
+                                    </label>
+
+                                    <select id="servicio">
+
+                                        <option value="">Seleccionar...</option>
+
+                                        <option>Netflix</option>
+                                        <option>Disney+</option>
+                                        <option>HBO Max</option>
+                                        <option>Prime Video</option>
+                                        <option>Spotify</option>
+                                        <option>YouTube Premium</option>
+                                        <option>Crunchyroll</option>
+                                        <option>Apple TV+</option>
+                                        <option>Paramount+</option>
+                                        <option>Canva Pro</option>
+                                        <option>Office 365</option>
+                                        <option>ChatGPT Plus</option>
+
+                                    </select>
+
+                                </div>
+
+                                <div class="campo">
+
+                                    <label>
+
+                                        Perfil *
+
+                                    </label>
+
+                                    <input id="perfil" type="text" placeholder="Perfil 1">
+
+                                </div>
+
+                                <div class="campo">
+
+                                    <label>
+
+                                        Usuario / Correo *
+
+                                    </label>
+
+                                    <input id="usuario" type="text">
+
+                                </div>
+
+                                <div class="campo">
+
+                                    <label>
+
+                                        Contraseña *
+
+                                    </label>
+
+                                    <input id="password" type="text">
+
+                                </div>
+
+                                <div class="campo">
+
+                                    <label>
+
+                                        Ciclo *
+
+                                    </label>
+
+                                    <select id="ciclo">
+
+                                        <option>Mensual</option>
+
+                                        <option>Trimestral</option>
+
+                                        <option>Semestral</option>
+
+                                        <option>Anual</option>
+
+                                    </select>
+
+                                </div>
+
+                                <div class="campo">
+
+                                    <label>Costo ($)</label>
+
+                                    <input id="costo" type="number" min="0" placeholder="2500">
+
+                                </div>
+
+                                <div class="campo">
+
+                                    <label>Precio de Venta ($)</label>
+
+                                    <input id="venta" type="number" min="0" placeholder="5000">
+
+                                </div>
+                            </div>
+
+                            <!-- =======================================
+                        DATOS CLIENTE
+                ======================================== -->
+
+                            <div class="form-section">
+
+                                <h3>
+
+                                    👤 Datos del Cliente
+
+                                </h3>
+
+                                <div class="campo">
+
+                                    <label>
+
+                                        Cliente *
+
+                                    </label>
+
+                                    <input id="cliente" type="text">
+
+                                </div>
+
+                                <div class="campo">
+
+                                    <label>
+
+                                        Teléfono *
+
+                                    </label>
+
+                                    <input id="telefono" type="text" placeholder="+569XXXXXXXX">
+
+                                </div>
+
+                                <div class="campo">
+
+                                    <label>
+
+                                        Instagram
+
+                                    </label>
+
+                                    <input id="instagram" type="text" placeholder="@usuario">
+
+                                </div>
+
+                                <div class="campo">
+
+                                    <label>
+
+                                        Observaciones
+
+                                    </label>
+
+                                    <textarea id="observaciones" rows="6"
+                                        placeholder="Información adicional del cliente..."></textarea>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        <!-- =======================================
+                        FECHAS
+            ======================================== -->
+
+                        <div class="form-section fechas-section">
+
+                            <h3>
+
+                                📅 Fechas
+
+                            </h3>
+
+                            <div class="fechas">
+
+                                <div class="campo">
+
+                                    <label>
+
+                                        Fecha Inicio *
+
+                                    </label>
+
+                                    <input id="inicio" type="date">
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="modal-footer">
+
+                        <button class="btn-secondary" id="cancelarModal">
+
+                            Cancelar
+
+                        </button>
+
+                        <button class="btn-primary" id="guardarCuenta">
+
+                            Guardar Cuenta
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </div>
+        </main>
+
+    </div>
+
+    <!-- ==========================================
+            SCRIPTS
+========================================== -->
+
+    <script src="{{ url_for('static', filename='js/api.js') }}"></script>
+
+    <script src="{{ url_for('static', filename='js/utils.js') }}"></script>
+
+    <script src="{{ url_for('static', filename='js/ui.js') }}"></script>
+
+    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+
+    <script src="{{ url_for('static', filename='js/cuentas.js') }}"></script>
+
+    <script src="{{ url_for('static', filename='js/clientes.js') }}"></script>
+
+    <script src="{{ url_for('static', filename='js/precios.js') }}"></script>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+
+    <!-- =========================================
+     MODAL CONFIRMACIÓN
+========================================= -->
+
+    <div class="modal" id="modalConfirmacion">
+
+        <div class="modal-content modal-confirmacion">
+
+            <div class="modal-header">
+
+                <h2 id="tituloConfirmacion">
+
+                    Confirmar acción
+
+                </h2>
+
+            </div>
+
+            <div class="modal-body">
+
+                <p id="mensajeConfirmacion">
+
+                    ¿Estás seguro?
+
+                </p>
+
+            </div>
+
+            <div class="modal-footer">
+
+                <button class="btn-secondary" id="btnCancelarConfirmacion">
+
+                    Cancelar
+
+                </button>
+
+                <button class="btn-danger" id="btnAceptarConfirmacion">
+
+                    Eliminar
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+</body>
+
+</html>
